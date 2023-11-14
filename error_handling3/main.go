@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 )
 
 type Result struct {
@@ -20,10 +19,9 @@ func main() {
 			for _, url := range urls {
 				var result Result
 				resp, err := http.Get(url)
-				result = Result{err, resp}
+				result = Result{Error: err, Response: resp}
 				select {
 				case <-done:
-					fmt.Println("cancelled")
 					return
 				case results <- result:
 				}
@@ -33,7 +31,7 @@ func main() {
 	}
 
 	done := make(chan interface{})
-	// close(done) doesn't make sense to call close on main goroutine
+	defer close(done)
 
 	errCount := 0
 	urls := []string{"a", "https://www.google.com", "b", "c", "d"}
@@ -43,12 +41,10 @@ func main() {
 			errCount++
 			if errCount >= 3 {
 				fmt.Println("Too many errors, breaking!")
-				close(done) // better but because only executing on main goroutine otherwise use defer close(chan)
 				break
 			}
 			continue
 		}
 		fmt.Printf("Response: %v\n", result.Response.Status)
 	}
-	time.Sleep(time.Second)
 }
