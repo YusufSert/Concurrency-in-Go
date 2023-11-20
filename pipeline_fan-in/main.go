@@ -1,6 +1,10 @@
 package pipeline_fan_in
 
-import "sync"
+import (
+	"fmt"
+	"runtime"
+	"sync"
+)
 
 func main() {
 	fanIn := func(done <-chan interface{}, channels ...<-chan interface{}) <-chan interface{} {
@@ -39,5 +43,9 @@ func main() {
 		}()
 
 		return muxStream
+
 	}
+	fmt.Println(fanIn)
+	runtime.NumCPU()
+
 }

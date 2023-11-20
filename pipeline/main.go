@@ -8,10 +8,7 @@ func main() {
 	generator := func(done <-chan interface{}, integers ...int) <-chan int {
 		intStream := make(chan int, len(integers))
 		go func() {
-			defer func() {
-				close(intStream)
-			}()
-
+			defer close(intStream)
 			for _, i := range integers {
 				select {
 				case <-done:
@@ -23,36 +20,34 @@ func main() {
 		return intStream
 	}
 
-	multiply := func(done <-chan interface{}, intStream <-chan int, multiplier int) <-chan int {
-		//log.Println("stage-mul")
-		multipliedStream := make(chan int)
+	multiply := func(done <-chan interface{}, inputStream <-chan int, multiplier int) <-chan int {
+		outputStream := make(chan int)
 		go func() {
-			defer close(multipliedStream)
-			for i := range intStream {
+			defer close(outputStream)
+			for i := range inputStream {
 				select {
 				case <-done:
 					return
-				case multipliedStream <- i * multiplier:
+				case outputStream <- i * multiplier:
 				}
 			}
 		}()
-		return multipliedStream
+		return outputStream
 	}
 
-	add := func(done <-chan interface{}, intStream <-chan int, additive int) <-chan int {
-		//log.Println("stage-add")
-		addStream := make(chan int)
+	add := func(done <-chan interface{}, inputStream <-chan int, additive int) <-chan int {
+		outputStream := make(chan int)
 		go func() {
-			defer close(addStream)
-			for i := range intStream {
+			defer close(outputStream)
+			for i := range inputStream {
 				select {
 				case <-done:
 					return
-				case addStream <- i + additive:
+				case outputStream <- i + additive:
 				}
 			}
 		}()
-		return addStream
+		return outputStream
 	}
 
 	done := make(chan interface{})
@@ -60,7 +55,8 @@ func main() {
 
 	intStream := generator(done, 1, 2, 3, 4)
 	pipeline := multiply(done, add(done, multiply(done, intStream, 2), 1), 2)
-	fmt.Println(pipeline)
-	fmt.Println()
 
+	for v := range pipeline {
+		fmt.Println(v)
+	}
 }
