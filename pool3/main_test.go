@@ -11,7 +11,7 @@ import (
 )
 
 func connectToService() interface{} {
-	time.Sleep(1*time.Second)
+	time.Sleep(1 * time.Second)
 	return struct{}{}
 }
 
@@ -27,7 +27,6 @@ func startNetworkDaemon() *sync.WaitGroup {
 		defer server.Close()
 
 		wg.Done()
-
 
 		for {
 			// network handler == havalı kelime
@@ -46,12 +45,10 @@ func startNetworkDaemon() *sync.WaitGroup {
 	return &wg
 }
 
-
 func init() {
 	daemonStarted := startNetworkDaemon()
-	daemonStarted.Wait() // use wait so function can complete yani server goroutine test'ten önce çalışsın/hazır olsun
+	daemonStarted.Wait() // use wait so function can complete yani server goroutine test1'ten önce çalışsın/hazır olsun
 }
-
 
 func BenchmarkNetworkRequest(b *testing.B) {
 	for i := 0; i < b.N; i++ {
